@@ -33,10 +33,11 @@ plotSoupCorrelation = function(sc){
 #' @param sc A SoupChannel object.
 #' @param nonExpressedGeneList Which sets of genes to use to estimate soup (see \code{\link{calculateContaminationFraction}}).
 #' @param maxCells Randomly plot only this many cells to prevent over-crowding.
+#' @param verbose Whether to print the estimated global contamination for each gene.
 #' @param ... Extra parameters passed to \code{\link{estimateNonExpressingCells}}.
 #' @importFrom stats setNames
 #' @return A ggplot2 object containing the plot.
-plotMarkerDistribution = function(sc,nonExpressedGeneList,maxCells=150,...){
+plotMarkerDistribution = function(sc,nonExpressedGeneList,maxCells=150,verbose=TRUE,...){
   if(!is(sc,'SoupChannel'))
     stop("sc not a valid SoupChannel object.")
   #Get nonExpressedGeneList algorithmically if missing...
@@ -76,7 +77,7 @@ plotMarkerDistribution = function(sc,nonExpressedGeneList,maxCells=150,...){
   globalRhos=c()
   for(i in seq_along(nonExpressedGeneList)){
     if(sum(nullMat[,i])>0){
-      tmp = calculateContaminationFraction(sc,nonExpressedGeneList[i],nullMat[,i,drop=FALSE])
+      tmp = calculateContaminationFraction(sc,nonExpressedGeneList[i],nullMat[,i,drop=FALSE],verbose=verbose)
       globalRhos = c(globalRhos,tmp$metaData$rho[1])
     }else{
       globalRhos = c(globalRhos,NA)

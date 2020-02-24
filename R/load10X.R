@@ -6,6 +6,7 @@
 #' @param dataDir Top level cellranger output directory (the directory that contains the "raw_gene_bc_matrices" folder).
 #' @param cellIDs Barcodes of droplets that contain cells.  If NULL, use the default cellranger set.
 #' @param channelName The name of the channel to store.  If NULL set to either \code{names(dataDir)} or \code{dataDir} is no name is set.
+#' @param dimRed Dimensional reduction to look for. tSNE by default.
 #' @param readArgs A list of extra parameters passed to \code{Seurat::Read10X}.
 #' @param includeFeatures If multiple feature types are present, keep only the types mentioned here and collapse to a single matrix.
 #' @param verbose Be verbose?
@@ -14,7 +15,7 @@
 #' @seealso SoupChannel estimateSoup
 #' @importFrom Seurat Read10X
 #' @importFrom utils read.csv
-load10X = function(dataDir,cellIDs=NULL,channelName=NULL,readArgs=list(),includeFeatures=c('Gene Expression'),verbose=TRUE,...){
+load10X = function(dataDir,cellIDs=NULL,channelName=NULL,dimRed='tSNE',readArgs=list(),includeFeatures=c('Gene Expression'),verbose=TRUE,...){
   #Work out which version we're dealing with
   isV3 = dir.exists(file.path(dataDir,'raw_feature_bc_matrix'))
   tgt = file.path(dataDir,
@@ -63,17 +64,17 @@ load10X = function(dataDir,cellIDs=NULL,channelName=NULL,readArgs=list(),include
     clusters = read.csv(tgt)
     mDat$clustersFine = clusters$Cluster
   }
-  #Get tSNE if available and point to it
-  tgt = file.path(dataDir,'analysis','tsne','2_components','projection.csv')
+  #Get DR if available and point to it
+  tgt = file.path(dataDir,'analysis',dimRed,'2_components','projection.csv')
   if(file.exists(tgt)){
-    tsne = read.csv(tgt)
+    dr = read.csv(tgt)
     if(is.null(mDat)){
-      mDat = data.frame(tSNE1=tsne$TSNE.1,tSNE2=tsne$TSNE.2,row.names=tsne$Barcode)
+      mDat = data.frame(dr[2],dr[3],row.names=dr$Barcode) %>% `names<-`(c(paste0(toupper(dimRed),'1'),paste0(toupper(dimRed),'2')))
     }else{
-      mDat$tSNE1 = tsne$TSNE.1[match(rownames(mDat),tsne$Barcode)]
-      mDat$tSNE2 = tsne$TSNE.2[match(rownames(mDat),tsne$Barcode)]
+      mDat[paste0(toupper(dimRed),'1')] = dr[match(rownames(mDat),dr$Barcode), 2]
+      mDat[paste0(toupper(dimRed),'2')] = dr[match(rownames(mDat),dr$Barcode), 3]
     }
-    DR = c('tSNE1','tSNE2')
+    DR = c(paste0(toupper(dimRed),'1'),paste0(toupper(dimRed),'2'))
   }else{
     DR=NULL
   }

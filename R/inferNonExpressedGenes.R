@@ -6,12 +6,15 @@
 #'
 #' The names of markers produced by this function can then be passed to \code{\link{plotMarkerDistribution}} using the parameters \code{nonExpressedGeneList} to visualise candidate genes.
 #'
+#' @export
 #' @param sc A ChannelList object.
+#' @param genesDrop A string or regular expression marking genes which need not be considered in the analysis
+#' @param usefulLimit The fraction of total cells comprised of cells expressing a given gene less than the soup. Default is 0.1, or 10% of cells.
 #' @param ... Passed to estimateNonExpressingCells.
 #' @return A modified version of \code{sc} with a \code{nonExpressedGenes} entry containing a table summarising the suitability of each gene as a candidate for estimating contamination for each channel.  The columns in this table are respectively: the number of cells expressing this gene, the number of cells with expression less than the soup, the fraction that are low, an "extremity score" (mean squared log-ratio), a "centrality score" (mean of 1/(1+x^2)) and an indicator if this gene has passed the criteria for being potentially useful.
 #' @importFrom Matrix t
 #' @importFrom utils head 
-inferNonExpressedGenes = function(sc,...){
+inferNonExpressedGenes = function(sc,genesDrop,usefulLimit,...){
   if(!is(sc,'SoupChannel'))
     stop("Must be a SoupChannel object")
   #Get the top 500 genes by soup expression
@@ -20,6 +23,8 @@ inferNonExpressedGenes = function(sc,...){
   gns = gns[sc$soupProfile[gns,'est']>0]
   #Drop common stupid genes
   #gns = gns[!grepl('^MT-',gns)]
+  #Drop exluded genes
+  gns = gns[!grepl(genesDrop)]
   #For each of these, try and get the non-expressing genes
   nullMat = estimateNonExpressingCells(sc,as.list(gns),...)
   gns = gns[colSums(nullMat)>0]
@@ -50,7 +55,7 @@ inferNonExpressedGenes = function(sc,...){
                        extremity = extremity,
                        centrality = centrality,
                        minFrac = minFrac,
-                       isUseful = as.integer(lowCount)>0.1*ncol(rat))
+                       isUseful = as.integer(lowCount)>usefulLimit*ncol(rat))
   #Order by something
   targets = targets[order(targets$isUseful,targets$extremity,decreasing=TRUE),]
   return(targets[rownames(targets) %in% gns,])
