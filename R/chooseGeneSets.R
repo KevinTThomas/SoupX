@@ -11,7 +11,6 @@
 #' @param ... Passed to \code{\link{inferNonExpressedGenes}}.
 #' @return A dataframe with each of the tested gene sets and specific genes. They are listed in order by the estimated global contamination fraction and the summed extremity score for all the genes in the set.
 #' @importFrom utils head
-#' @importFrom BiocGenerics rownames, unlist, sapply, lapply, mapply
 #' @importFrom dplyr intersect
 #' @importFrom rlang set_names
 chooseGeneSets = function (sc, inferredGenes = NULL, candidateList, top_n = 20,...) {

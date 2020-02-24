@@ -4,10 +4,14 @@
 \alias{inferNonExpressedGenes}
 \title{Calculates the genes most likely to be non-expressed in some fraction of cells}
 \usage{
-inferNonExpressedGenes(sc, ...)
+inferNonExpressedGenes(sc, genesDrop, usefulLimit, ...)
 }
 \arguments{
 \item{sc}{A ChannelList object.}
+
+\item{genesDrop}{A string or regular expression marking genes which need not be considered in the analysis}
+
+\item{usefulLimit}{The fraction of total cells comprised of cells expressing a given gene less than the soup. Default is 0.1, or 10% of cells.}
 
 \item{...}{Passed to estimateNonExpressingCells.}
 }

@@ -4,7 +4,13 @@
 \alias{plotMarkerDistribution}
 \title{Plots the distribution of the observed to expected expression for marker genes}
 \usage{
-plotMarkerDistribution(sc, nonExpressedGeneList, maxCells = 150, ...)
+plotMarkerDistribution(
+  sc,
+  nonExpressedGeneList,
+  maxCells = 150,
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{sc}{A SoupChannel object.}
@@ -12,6 +18,8 @@ plotMarkerDistribution(sc, nonExpressedGeneList, maxCells = 150, ...)
 \item{nonExpressedGeneList}{Which sets of genes to use to estimate soup (see \code{\link{calculateContaminationFraction}}).}
 
 \item{maxCells}{Randomly plot only this many cells to prevent over-crowding.}
+
+\item{verbose}{Whether to print the estimated global contamination for each gene.}
 
 \item{...}{Extra parameters passed to \code{\link{estimateNonExpressingCells}}.}
 }
