@@ -24,7 +24,7 @@ inferNonExpressedGenes = function(sc,genesDrop,usefulLimit,...){
   #Drop common stupid genes
   #gns = gns[!grepl('^MT-',gns)]
   #Drop exluded genes
-  gns = gns[!grepl(genesDrop)]
+  gns = gns[!grepl(genesDrop, gns)]
   #For each of these, try and get the non-expressing genes
   nullMat = estimateNonExpressingCells(sc,as.list(gns),...)
   gns = gns[colSums(nullMat)>0]
