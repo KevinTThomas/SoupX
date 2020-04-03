@@ -8,14 +8,16 @@
 #' @param sc A SoupChannel object.
 #' @param inferredGenes A gene table passed from \code{\link{inferNonExpressedGenes}}. If \code{NULL}, the function is run on the SoupChannel object. 
 #' @param candidateList A list of pre-selected candidate gene sets to cross-reference with the inferred non-expressed genes.
+#' @param top_n How many genes to consider from the top of the inferredGenes table.
+#' @param prefixDrop A character scalar indicating the prefix to drop from the gene names.
 #' @param ... Passed to \code{\link{inferNonExpressedGenes}}.
 #' @return A dataframe with each of the tested gene sets and specific genes. They are listed in order by the estimated global contamination fraction and the summed extremity score for all the genes in the set.
 #' @importFrom utils head
 #' @importFrom dplyr intersect
 #' @importFrom rlang set_names
-chooseGeneSets = function (sc, inferredGenes = NULL, candidateList, top_n = 20,...) {
+chooseGeneSets = function (sc, inferredGenes = NULL, candidateList, top_n = 20, prefixDrop, ...) {
   if(is.null(inferredGenes)) {
-    print("Inferring non-expressed genes.")
+    message("Inferring non-expressed genes.")
     inferredGenes = inferNonExpressedGenes(sc,...)
   }
   topGenes = inferredGenes %>% head(top_n)
@@ -26,10 +28,21 @@ chooseGeneSets = function (sc, inferredGenes = NULL, candidateList, top_n = 20,.
     .[lapply(.,length)>0]
   flagged_sets = intersect(names(NEgns), names(candidateList))
   
+  # If the candidate genes don't show up in the top 20, use the candidates that show up at all.
   if (is_empty(flagged_sets)) {
-    NEgns = rownames(topGenes) %>% list(.) %>% `names<-`(rownames(topGenes))
-    candidateList = NEgns
+    NEgns = inferredGenes %>%
+      row.names() %>%
+      intersect(y = unlist(candidateList)) %>%
+      (function(y) lapply(candidateList, function (x) intersect(x, y))) %>%
+      .[lapply(.,length)>0]
     flagged_sets = intersect(names(NEgns), names(candidateList))
+    tab = data.frame(genes = sapply(NEgns, function(x) str_flatten(x, collapse = ", ") %>% str_remove_all(., prefixDrop)),
+                     pct.set = mapply(function (x,y) length(x)/length(y), x = NEgns, y = candidateList[flagged_sets]),
+                     sum.extremity = sapply(NEgns,  function (x) sum(inferredGenes$extremity[rownames(inferredGenes) %in% x])),
+                     frac.is.Useful = sapply(NEgns, function (x) {sum(inferredGenes$isUseful[rownames(inferredGenes) %in% x])/length(x)}),
+                     check.rows = TRUE
+    )
+    return(tab)
   }
   
   # nullMat = sapply(flagged_sets,
@@ -72,7 +85,7 @@ chooseGeneSets = function (sc, inferredGenes = NULL, candidateList, top_n = 20,.
   #   }
   # }
   
-  tab = data.frame(genes = sapply(NEgns, function(x) str_flatten(x, collapse = ", ") %>% str_remove_all(., "hg38_")),
+  tab = data.frame(genes = sapply(NEgns, function(x) str_flatten(x, collapse = ", ") %>% str_remove_all(., prefixDrop)),
                    pct.set = mapply(function (x,y) length(x)/length(y), x = NEgns, y = candidateList[flagged_sets]),
                    sum.extremity = sapply(NEgns,  function (x) sum(topGenes$extremity[rownames(topGenes) %in% x])),
                    frac.is.Useful = sapply(NEgns, function (x) {sum(topGenes$isUseful[rownames(topGenes) %in% x])/length(x)}),
