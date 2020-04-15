@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1582576239976.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2694925645",
+    "id" : "E0C94BA2",
+    "lastKnownWriteTime" : 1582569177,
+    "last_content_update" : 1582569177,
+    "path" : "~/kevin/workplace/scrnaseq-drake/_drake.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

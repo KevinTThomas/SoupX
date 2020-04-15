@@ -1,0 +1,76 @@
+reticulate::use_condaenv(condaenv = "reticulate", required = TRUE, conda = "~/conda/bin/conda")
+options(future.globals.maxSize = +Inf)
+
+library(here)
+set_here()
+
+source("R/packages.R")  # Load your packages, e.g. library(drake).
+source("R/functions.R") # Define your custom code as a bunch of functions.
+
+### Setup bucket access
+# flyio_set_datasource("gcs")
+# flyio_auth("/home/rstudio/google_storage_access_key_scrna-196615.json")
+# flyio_set_bucket("memory-beta", data_source="gcs")
+
+### Setup project variables
+subset_data = NULL
+multisample = FALSE
+primary_species_prefix = "GRCh38_"
+secondary_species_prefix = "mm10___"
+contam_gene_sets = list(
+  HG = c(
+    "HBA1",
+    "HBA2",
+    "HBB",
+    "HBD",
+    "HBE1",
+    "HBG1",
+    "HBG2",
+    "HBM",
+    "HBQ1",
+    "HBZ"
+  ),
+  IG = c(
+    "IGHA1",
+    "IGHA2",
+    "IGHG1",
+    "IGHG2",
+    "IGHG3",
+    "IGHG4",
+    "IGHD",
+    "IGHE",
+    "IGHM",
+    "IGLC1",
+    "IGLC2",
+    "IGLC3",
+    "IGLC4",
+    "IGLC5",
+    "IGLC6",
+    "IGLC7",
+    "IGKC"
+  )) %>% lapply(function(x) paste0(primary_species_prefix, x))
+
+### Setup file locations
+file_directory = "/home/rstudio/kevin/datasets/disease_activity/droplets"
+source_count_file = NULL
+metadata_file = "samplesheet.csv"
+
+source("R/plan.R")
+# config <- drake_config(plan)
+# vis_drake_graph(config)
+
+BPPARAM = SnowParam(workers=8, type = "SOCK")
+BNPARAM = HnswParam()
+BiocParallel::register(BPPARAM)
+future::plan(strategy = future::multisession, workers = 8)
+#future::plan(strategy = "multisession")
+
+# _drake.R must end with a call to drake_config().
+# The arguments to drake_config() are basically the same as those to make().
+scrna_plan <- drake_config(analysis_plan,
+                           verbose = 2,
+                           parallelism = "future",
+                           jobs = 8,
+                           lock_envir = FALSE,
+                           cache = new_cache(path = paste0(getwd(),"/.drake"), hash_algorithm = "md5"),
+                           keep_going = TRUE)
